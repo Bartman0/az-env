@@ -53,6 +53,11 @@ echo "resource group name: ${resource_group}"
 keyvault_name=$(az keyvault list | jq -r --arg env "${environment}" '.[] | select(.name|test($env)).name')
 echo "keyvault name: ${keyvault_name}"
 
+if [ ! -z "${AZURE_CENTRAL_ACR_NAME}" -a ! -z "${AZURE_CENTRAL_ACR_SUBSCRIPTION_ID}" ]
+then
+	az acr login --name="${AZURE_CENTRAL_ACR_NAME}" --subscription "${AZURE_CENTRAL_ACR_SUBSCRIPTION_ID}"
+fi
+
 # get all secrets and put them in a file for environment variable setting
 (
 echo "export SUBSCRIPTION_ID=${sub_id}"
