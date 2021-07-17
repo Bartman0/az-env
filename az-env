@@ -1,0 +1,70 @@
+#!/bin/bash
+
+set -e
+
+environment=${1:-dev}
+
+IFS=$'\n'
+
+# first make sure we are logged out
+az logout
+
+title="Select subscription"
+prompt="Pick a subscription:"
+sub_info=$(az login 2> /dev/null)
+options=($(echo ${sub_info} | jq -r ".[].name"))
+
+echo "$title"
+PS3="$prompt "
+select opt in "${options[@]}" "Quit"
+do
+    if [[ "$REPLY" == "$((${#options[@]}+1))" ]]; then break; fi
+
+    # complain if no reply was there, and loop to ask again
+    if [[ "$REPLY" == "" ]]
+    then
+        echo "not a valid response"
+        continue
+    fi
+
+    # now we can use the selected subscription
+    break
+done
+
+index=$(($REPLY-1))
+sub_name=${options[$index]}
+echo "chosen subscription: ${sub_name}"
+echo ""
+
+# set jq var to shell var sub_name
+sub_select='.[] | select(.name == $sub_name)'
+sub_id=$(echo ${sub_info}    | jq -r --arg sub_name "${sub_name}" "${sub_select}.id")
+tenant_id=$(echo ${sub_info} | jq -r --arg sub_name "${sub_name}" "${sub_select}.tenantId")
+echo "subscription id: ${sub_id}"
+echo "tenant id: ${tenant_id}"
+
+# set subscription on account
+az account set -s "${sub_id}"
+
+# get resource group name
+resource_group=$(az group list | jq -r --arg env "${environment}" '.[] | select(.name|test($env)).name')
+echo "resource group name: ${resource_group}"
+# get keyvault name
+keyvault_name=$(az keyvault list | jq -r --arg env "${environment}" '.[] | select(.name|test($env)).name')
+echo "keyvault name: ${keyvault_name}"
+
+# get all secrets and put them in a file for environment variable setting
+(
+echo "export SUBSCRIPTION_ID=${sub_id}"
+echo "export RESOURCE_GROUP=${resource_group}"
+echo "export KEYVAULT_NAME=${keyvault_name}"
+secrets=($(az keyvault secret list --vault-name hansanders-dev | jq -r '.[].name'))
+for i in "${!secrets[@]}"
+do
+	secret_name="${secrets[$i]}"
+	env_name=$(echo "${secret_name//-/_}" | tr '[:lower:]' '[:upper:]')
+	secret_value=$(az keyvault secret show --name "${secret_name}" --vault-name "${keyvault_name}" | jq -r ".value")
+	echo "export ${env_name}='${secret_value}'"
+done
+) > ~/.az-env-vars
+
