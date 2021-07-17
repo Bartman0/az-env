@@ -25,3 +25,14 @@ running env gives:
 - KEYVAULT_NAME=hansanders-dev
 - APP_DEVOPS_CLIENTID=64dbf515-beef-4758-a646-d4970fd69dd7
 - [[ etc; further output deleted ]]
+
+Built into the script is the option to login to a central container registry. 
+For this login to work you must set env vars AZURE_CENTRAL_ACR_NAME and AZURE_CENTRAL_ACR_SUBSCRIPTION_ID.
+
+For example, put this into your ~/.profile:
+- export AZURE_CENTRAL_ACR_NAME="launchpad001"
+- export AZURE_CENTRAL_ACR_SUBSCRIPTION_ID="600a3ac6-4bc1-4816-a800-18f39157d8b6"
+
+## Requirements
+
+jq
