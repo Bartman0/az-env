@@ -7,4 +7,4 @@ Usage:
 
 Examples:
 - alias az-env-dev='~/bin/az-env dev && source ~/.az-env-vars'
-- alias az-env-dev='~/bin/az-env tst && source ~/.az-env-vars'
+- alias az-env-tst='~/bin/az-env tst && source ~/.az-env-vars'
