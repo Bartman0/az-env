@@ -1,13 +1,13 @@
 #!/bin/bash
 
-set -e
-
 environment=${1:-dev}
 
 IFS=$'\n'
 
 # first make sure we are logged out
 az logout
+
+set -e
 
 title="Select subscription"
 prompt="Pick a subscription:"
@@ -62,7 +62,8 @@ fi
 (
 echo "export SUBSCRIPTION_ID=${sub_id}"
 echo "export RESOURCE_GROUP=${resource_group}"
-echo "export KEYVAULT_NAME=${keyvault_name}"
+echo "export KEY_VAULT_NAME=${keyvault_name}"
+echo "export KEY_VAULT_URI=https://${keyvault_name}.vault.azure.net/"
 secrets=($(az keyvault secret list --vault-name hansanders-dev | jq -r '.[].name'))
 for i in "${!secrets[@]}"
 do
