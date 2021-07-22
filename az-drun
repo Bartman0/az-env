@@ -35,12 +35,12 @@ export AZURE_CLIENT_ID=${APP_ETL_CLIENTID}
 export AZURE_CLIENT_SECRET=${APP_ETL_SECRET}
 
 # run in subshell so an exit code != 0 has no consequences
-( docker rm "${container_name}"; true )
+( set +e; docker rm "${container_name}"; true )
 docker build -t ${acr_registry}/${image_name} .
 
 if [ ${run_local} -eq 1 ]
 then
-	docker run -it --rm -name "${container_name}" -e CONF_KEYVAULT -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET ${acr_registry}/${image_name}
+	docker run -it --rm --name "${container_name}" -e CONF_KEYVAULT -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET ${acr_registry}/${image_name}
 else
 	# test existence of deployment group
 	deployment_group_indicator=$(az deployment group show -g ${RESOURCE_GROUP} -n ${deployment_group} > /dev/null 2>&1; echo $?)

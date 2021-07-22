@@ -50,7 +50,7 @@ az account set -s "${sub_id}"
 resource_group=$(az group list | jq -r --arg env "${environment}" '.[] | select(.name|test($env)).name')
 echo "resource group name: ${resource_group}"
 # get keyvault name
-keyvault_name=$(az keyvault list | jq -r --arg env "${environment}" '.[] | select(.name|test($env)).name')
+keyvault_name=$(az keyvault list | jq -r --arg env "${environment}$" '.[] | select(.name|test($env)).name')
 echo "keyvault name: ${keyvault_name}"
 
 if [ ! -z "${AZURE_CENTRAL_ACR_NAME}" -a ! -z "${AZURE_CENTRAL_ACR_SUBSCRIPTION_ID}" ]
@@ -64,7 +64,7 @@ echo "export SUBSCRIPTION_ID=${sub_id}"
 echo "export RESOURCE_GROUP=${resource_group}"
 echo "export KEY_VAULT_NAME=${keyvault_name}"
 echo "export KEY_VAULT_URI=https://${keyvault_name}.vault.azure.net/"
-secrets=($(az keyvault secret list --vault-name hansanders-dev | jq -r '.[].name'))
+secrets=($(az keyvault secret list --vault-name "${keyvault_name}" | jq -r '.[].name'))
 for i in "${!secrets[@]}"
 do
 	secret_name="${secrets[$i]}"
