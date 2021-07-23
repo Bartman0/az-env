@@ -30,6 +30,7 @@ acr_name=${client_name}001
 acr_registry=${acr_name}.azurecr.io
 image_name="${container_name}:${USER}"
 deployment_group="${image_name//:/-}"
+container_command="/etl/scripts/etl_${USER}.sh"
 
 export CONF_KEYVAULT=${KEY_VAULT_URI}
 export AZURE_CLIENT_ID=${APP_ETL_CLIENTID}
@@ -41,7 +42,7 @@ docker build -t ${acr_registry}/${image_name} .
 
 if [ ${run_local} -eq 1 ]
 then
-	docker run -it --rm --name "${container_name}" -e CONF_KEYVAULT -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET ${acr_registry}/${image_name} -file "${USER}.kjb"
+	docker run -it --rm --name "${container_name}" -e CONF_KEYVAULT -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET ${acr_registry}/${image_name} "${container_command}"
 else
 	az acr login --name ${acr_name} --subscription ${SUBSCRIPTION_ID}
 	docker push ${acr_registry}/${image_name}
@@ -58,6 +59,7 @@ else
 			-p "projectName=${client_name}" \
 			-p "containerProject=${container_name}" \
 			-p "containerName=${container_name}" \
+			-p "containerCommand=${container_command}" \
 			-p "environment=${environment}" \
 			-p "etlPrincipalId=${AZURE_CLIENT_ID}" \
 			-p "etlPrincipalPassword=${AZURE_CLIENT_SECRET}" \
