@@ -3,9 +3,21 @@ Project for an Azure login script (az-env) including settings of env vars, and a
 These scripts assume our standards and best practices, so may require adapting for your specific environment.
 
 ## az-env
-Installation and usage:
+Script that logs you in into Azure and sets a lot of env vars.
+
+Installation:
 - put az-env in your ~/bin directory
 - create aliases for whatever environments you have in your subscription in your shell profile
+
+Examples:
+- alias az-env-dev='~/bin/az-env dev && source ~/.az-env-vars'
+- alias az-env-tst='~/bin/az-env tst && source ~/.az-env-vars'
+
+Usage:
+az-env [ \<environment> ]
+
+environment: *dev/tst/acc/prd*
+
 - run the alias of your choice
 - result: 
     - you are logged into the subscription you selected and 
@@ -13,10 +25,6 @@ Installation and usage:
     - all secrets are available in your current shell as env vars
 
 The secrets are converted by their name in the sense that dashes are replaced by underscores, and the names are made all uppercase.
-
-Examples:
-- alias az-env-dev='~/bin/az-env dev && source ~/.az-env-vars'
-- alias az-env-tst='~/bin/az-env tst && source ~/.az-env-vars'
 
 Execute:
 - az-env-dev
@@ -46,6 +54,7 @@ environment: *dev/tst/acc/prd/local*, where *local* will run the Docker containe
 
 container base name: default *dwh-etl* will be resulting in container names such as client-dwh-etl and images names such as client-dwh-etl:rkooijman
 
+The script that is run in the container is /etl/scripts/etl_${USER}.sh because we are developing here. Do you want to run the standard daily job or what have you? Just symlink /etl/scripts/etl_${USER}.sh --> /etl/scripts/dwh_daily.sh for example.
 
 ## Requirements
 
