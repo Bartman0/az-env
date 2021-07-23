@@ -58,6 +58,6 @@ The script that is run in the container is /etl/scripts/etl_${USER}.sh because w
 
 ## Requirements
 
-jq, https://stedolan.github.io/jq/
-az cli tools, https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
+- jq, https://stedolan.github.io/jq/
+- az cli tools, https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 
