@@ -30,7 +30,8 @@ acr_name=${client_name}001
 acr_registry=${acr_name}.azurecr.io
 image_name="${container_name}:${USER}"
 deployment_group="${image_name//:/-}"
-container_command='[ "/etl/scripts/etl_${USER}.sh" ]'
+container_command="/etl/scripts/etl_${USER}.sh"
+container_command_array="[ $container_command ]"
 
 export CONF_KEYVAULT=${KEY_VAULT_URI}
 export AZURE_CLIENT_ID=${APP_ETL_CLIENTID}
@@ -59,7 +60,7 @@ else
 			-p "projectName=${client_name}" \
 			-p "containerProject=${container_name}" \
 			-p "containerName=${container_name}" \
-			-p "containerCommand=${container_command}" \
+			-p "containerCommand=${container_command_array}" \
 			-p "environment=${environment}" \
 			-p "etlPrincipalId=${AZURE_CLIENT_ID}" \
 			-p "etlPrincipalPassword=${AZURE_CLIENT_SECRET}" \
