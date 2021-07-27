@@ -71,6 +71,7 @@ do
 	env_name=$(echo "${secret_name//-/_}" | tr '[:lower:]' '[:upper:]')
 	secret_value=$(az keyvault secret show --name "${secret_name}" --vault-name "${keyvault_name}" | jq -r ".value")
 	echo "export ${env_name}='${secret_value}'"
+	echo -n "." 1>&2
 done
 ) > ~/.az-env-vars
 

@@ -13,7 +13,7 @@ then
 	exit 1
 fi
 
-if [ -z "${AZURE_TENANT_ID}" -o -z "${KEY_VAULT_NAME}" ]
+if [ -z "${AZURE_TENANT_ID}" -o -z "${AZURE_SUBSCRIPTION_ID}" -o -z "${KEY_VAULT_NAME}" ]
 then
 	echo "some env vars are missing, please run az-env first"
 	exit 1
@@ -64,15 +64,15 @@ else
 			"containerName=${container_name}" \
 			"containerCommand=${container_command_array}" \
 			"environment=${environment}" \
-			"etlPrincipalId=${AZURE_CLIENT_ID}" \
-			"etlPrincipalPassword=${AZURE_CLIENT_SECRET}" \
+			"etlPrincipalId=${APP_ETL_CLIENTID}" \
+			"etlPrincipalPassword=${APP_ETL_PASSWORD}" \
 			"containerTag=${USER}" )
 		if [ "${param1}" != "" ]; then
 			container_parameters+=( "${param1}" )
 		fi
 		# put '-p ' for each parameter
 		container_parameters=( "${container_parameters[@]/#/-p }" )
-		az deployment group create -g ${RESOURCE_GROUP} --template-file container-etl-template.json \
+		az deployment group create -g ${RESOURCE_GROUP} -n ${deployment_group} --template-file container-etl-template.json \
 			${container_parameters[@]}
 	fi
 fi
