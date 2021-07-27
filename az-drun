@@ -30,7 +30,7 @@ acr_name=${client_name}001
 acr_registry=${acr_name}.azurecr.io
 image_name="${container_name}:${USER}"
 deployment_group="${image_name//:/-}"
-container_command="/etl/scripts/etl_${USER}.sh"
+container_command='[ "/etl/scripts/etl_${USER}.sh" ]'
 
 export CONF_KEYVAULT=${KEY_VAULT_URI}
 export AZURE_CLIENT_ID=${APP_ETL_CLIENTID}
