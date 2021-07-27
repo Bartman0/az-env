@@ -29,7 +29,9 @@ The secrets are converted by their name in the sense that dashes are replaced by
 Execute:
 - az-env-dev
 
-running *env* gives:
+This will prompt an Azure login screen where you select your account to be used. After this, you need to select the subscription to use. The last option is 'Quit' in case you want to stop there.
+
+After this, running *env* gives:
 - SUBSCRIPTION_ID=2434a957-464b-4a4d-9f54-1b0d41f1098f
 - RESOURCE_GROUP=client-dev
 - KEY_VAULT_NAME=client-dev
