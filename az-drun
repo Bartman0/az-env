@@ -4,7 +4,8 @@ set -e
 
 # use parameters, or use defaults otherwise
 environment=${1:-dev}
-container_base_name=${2:-dwh-etl}
+param1="$2"
+container_base_name=${3:-dwh-etl}
 
 if [ -z "${USER}" ]
 then
@@ -19,19 +20,20 @@ then
 fi
 
 run_local=0
-if [ "$1" == "local" ]
+if [ "$environment" == "local" ]
 then
 	run_local=1
 fi
 
 client_name=${KEY_VAULT_NAME%-*}
-container_name="${client_name}-${container_base_name}"
+#container_name="${client_name}-${container_base_name}"
+container_name="${container_base_name}"
 acr_name=${client_name}001
 acr_registry=${acr_name}.azurecr.io
 image_name="${container_name}:${USER}"
 deployment_group="${image_name//:/-}"
 container_command="/etl/scripts/etl_${USER}.sh"
-container_command_array="[ $container_command ]"
+container_command_array="[\"${container_command}\"]"
 
 export CONF_KEYVAULT=${KEY_VAULT_URI}
 export AZURE_CLIENT_ID=${APP_ETL_CLIENTID}
@@ -56,16 +58,22 @@ else
 		az container start -g ${RESOURCE_GROUP} -n ${deployment_group}
 	else
 		# create the deployment group with the container parameters
-		# TBD create container parameters
+		declare -a container_parameters
+		container_parameters=( "projectName=${client_name}" \
+			"containerProject=${container_name}" \
+			"containerName=${container_name}" \
+			"containerCommand=${container_command_array}" \
+			"environment=${environment}" \
+			"etlPrincipalId=${AZURE_CLIENT_ID}" \
+			"etlPrincipalPassword=${AZURE_CLIENT_SECRET}" \
+			"containerTag=${USER}" )
+		if [ "${param1}" != "" ]; then
+			container_parameters+=( "${param1}" )
+		fi
+		# put '-p ' for each parameter
+		container_parameters=( "${container_parameters[@]/#/-p }" )
 		az deployment group create -g ${RESOURCE_GROUP} --template-file container-etl-template.json \
-			-p "projectName=${client_name}" \
-			-p "containerProject=${container_name}" \
-			-p "containerName=${container_name}" \
-			-p "containerCommand=${container_command_array}" \
-			-p "environment=${environment}" \
-			-p "etlPrincipalId=${AZURE_CLIENT_ID}" \
-			-p "etlPrincipalPassword=${AZURE_CLIENT_SECRET}" \
-			-p "containerTag=${USER}"
+			${container_parameters[@]}
 	fi
 fi
 
