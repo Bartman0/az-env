@@ -5,6 +5,7 @@ set -e
 # use parameters, or use defaults otherwise
 environment=${1:-dev}
 param1="$2"
+param1_value="${param1#*=}"
 container_base_name=${3:-dwh-etl}
 
 if [ -z "${USER}" ]
@@ -31,9 +32,11 @@ container_name="${container_base_name}"
 acr_name=${client_name}001
 acr_registry=${acr_name}.azurecr.io
 image_name="${container_name}:${USER}"
-deployment_group="${image_name//:/-}"
+#deployment_group="${image_name//:/-}"
+deployment_group="container-etl-template"   # the default name when not specifying a name
 container_command="/etl/scripts/etl_${USER}.sh"
 container_command_array="[\"${container_command}\"]"
+container_group="${client_name}-${environment}-etl-${param1_value}"
 
 export CONF_KEYVAULT=${KEY_VAULT_URI}
 export AZURE_CLIENT_ID=${APP_ETL_CLIENTID}
@@ -55,7 +58,7 @@ else
 	if [ "${deployment_group_indicator}" == "0" ]
 	then
 		# the deployment group already exists, just start the container
-		az container start -g ${RESOURCE_GROUP} -n ${deployment_group}
+		az container start -g ${RESOURCE_GROUP} -n ${container_group}
 	else
 		# create the deployment group with the container parameters
 		declare -a container_parameters

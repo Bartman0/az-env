@@ -25,6 +25,7 @@ environment: *dev/tst/acc/prd*
     - all secrets are available in your current shell as env vars
 
 The secrets are converted by their name in the sense that dashes are replaced by underscores, and the names are made all uppercase.
+Setting the env vars based on secrets is a rather slow process. A dotted bar is shown to indicate progress.
 
 Execute:
 - az-env-dev
