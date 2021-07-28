@@ -46,12 +46,14 @@ export AZURE_CLIENT_SECRET=${APP_ETL_PASSWORD}
 ( set +e; docker rm "${container_name}"; true )
 docker build -t ${acr_registry}/${image_name} .
 
+# we may not need it, but we are going to login anyway
+az acr login --name ${acr_name} --subscription ${SUBSCRIPTION_ID}
+
 if [ ${run_local} -eq 1 ]
 then
 	# the env vars are set again in this local run to make copy-paste of the command complete and therefore easier
 	docker run -it --rm --name "${container_name}" -e CONF_KEYVAULT="${KEY_VAULT_URI}" -e AZURE_TENANT_ID -e AZURE_CLIENT_ID="${APP_ETL_CLIENTID}" -e AZURE_CLIENT_SECRET="${APP_ETL_PASSWORD}" ${acr_registry}/${image_name} "${container_command}"
 else
-	az acr login --name ${acr_name} --subscription ${SUBSCRIPTION_ID}
 	docker push ${acr_registry}/${image_name}
 	# test existence of deployment group
 	deployment_group_indicator=$(set +e; az deployment group show -g ${RESOURCE_GROUP} -n ${deployment_group} > /dev/null 2>&1; echo $?)

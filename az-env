@@ -59,7 +59,7 @@ then
 fi
 
 # get all secrets and put them in a file for environment variable setting
-echo "setting secrets to env vars"
+echo "retrieving secrets"
 (
 echo "export SUBSCRIPTION_ID=${sub_id}"
 echo "export RESOURCE_GROUP=${resource_group}"
