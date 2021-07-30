@@ -20,6 +20,12 @@ then
 	exit 1
 fi
 
+if [ ! -f ./Dockerfile ]
+then
+	echo "no Dockerfile found, I am probably in the wrong directory?"
+	exit 1
+fi
+
 run_local=0
 if [ "$environment" == "local" ]
 then
