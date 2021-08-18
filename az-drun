@@ -35,7 +35,7 @@ fi
 client_name=${KEY_VAULT_NAME%-*}
 #container_name="${client_name}-${container_base_name}"
 container_name="${container_base_name}"
-acr_name=${client_name}001
+acr_name=${client_name}
 acr_registry=${acr_name}.azurecr.io
 image_name="${container_name}:${USER}"
 #deployment_group="${image_name//:/-}"
@@ -47,6 +47,7 @@ container_group="${client_name}-${environment}-etl-${param1_value}"
 export CONF_KEYVAULT=${KEY_VAULT_URI}
 export AZURE_CLIENT_ID=${APP_ETL_CLIENTID}
 export AZURE_CLIENT_SECRET=${APP_ETL_PASSWORD}
+export ACR_REGISTRY=${acr_registry}
 
 # run in subshell so an exit code != 0 has no consequences
 ( set +e; docker rm "${container_name}"; true )

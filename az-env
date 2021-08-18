@@ -49,28 +49,34 @@ az account set -s "${sub_id}"
 # get resource group name
 resource_group=$(az group list | jq -r --arg env "${environment}" '.[] | select(.name|test($env)).name')
 echo "resource group name: ${resource_group}"
-# get keyvault name
-keyvault_name=$(az keyvault list | jq -r --arg env "${environment}$" '.[] | select(.name|test($env)).name')
-echo "keyvault name: ${keyvault_name}"
+# get key vault name
+key_vault_name=$(az keyvault list | jq -r --arg env "${environment}$" '.[] | select(.name|test($env)).name')
+echo "key vault name: ${key_vault_name}"
 
 if [ ! -z "${AZURE_CENTRAL_ACR_NAME}" -a ! -z "${AZURE_CENTRAL_ACR_SUBSCRIPTION_ID}" ]
 then
 	az acr login --name="${AZURE_CENTRAL_ACR_NAME}" --subscription "${AZURE_CENTRAL_ACR_SUBSCRIPTION_ID}"
 fi
 
+client_name="${key_vault_name%-*}"
+acr_name="${client_name}"
+acr_registry="${acr_name}.azurecr.io"
+
 # get all secrets and put them in a file for environment variable setting
 echo "retrieving secrets"
 (
+echo "export CLIENT_NAME=${client_name}"
+echo "export ACR_REGISTRY=${acr_registry}"
 echo "export SUBSCRIPTION_ID=${sub_id}"
 echo "export RESOURCE_GROUP=${resource_group}"
-echo "export KEY_VAULT_NAME=${keyvault_name}"
-echo "export KEY_VAULT_URI=https://${keyvault_name}.vault.azure.net/"
-secrets=($(az keyvault secret list --vault-name "${keyvault_name}" | jq -r '.[].name'))
+echo "export KEY_VAULT_NAME=${key_vault_name}"
+echo "export KEY_VAULT_URI=https://${key_vault_name}.vault.azure.net/"
+secrets=($(az keyvault secret list --vault-name "${key_vault_name}" | jq -r '.[].name'))
 for i in "${!secrets[@]}"
 do
 	secret_name="${secrets[$i]}"
 	env_name=$(echo "${secret_name//-/_}" | tr '[:lower:]' '[:upper:]')
-	secret_value=$(az keyvault secret show --name "${secret_name}" --vault-name "${keyvault_name}" | jq -r ".value")
+	secret_value=$(az keyvault secret show --name "${secret_name}" --vault-name "${key_vault_name}" | jq -r ".value")
 	echo "export ${env_name}='${secret_value}'"
 	echo -n "." 1>&2
 done
