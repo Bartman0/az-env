@@ -21,7 +21,7 @@ do
     if [[ "$REPLY" == "$((${#options[@]}+1))" ]]; then break; fi
 
     # complain if no reply was there, and loop to ask again
-    if [[ "$REPLY" == "" ]]
+    if [ "$REPLY" == "" -o $REPLY -gt $((${#options[@]}+1)) ]
     then
         echo "not a valid response"
         continue
