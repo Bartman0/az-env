@@ -8,10 +8,10 @@ then
 	exit 1
 fi
 
-if [ -z "${CLIENT_NAME}" -o -z "${AZURE_SUBSCRIPTION_ID}" ]
+if [ -z "${ACR_NAME}" -o -z "${AZURE_SUBSCRIPTION_ID}" ]
 then
 	echo "some env vars are missing, please run az-env first"
 	exit 1
 fi
 
-az acr login --name "${CLIENT_NAME}" --subscription "${AZURE_SUBSCRIPTION_ID}"
+az acr login --name "${ACR_NAME}" --subscription "${AZURE_SUBSCRIPTION_ID}"

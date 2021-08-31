@@ -59,13 +59,14 @@ then
 fi
 
 client_name="${key_vault_name%-*}"
-acr_name="${client_name}"
+acr_name=$(az acr list | jq -r ".[].name" | head -1)
 acr_registry="${acr_name}.azurecr.io"
 
 # get all secrets and put them in a file for environment variable setting
 echo "retrieving secrets"
 (
 echo "export CLIENT_NAME=${client_name}"
+echo "export ACR_NAME=${acr_name}"
 echo "export ACR_REGISTRY=${acr_registry}"
 echo "export SUBSCRIPTION_ID=${sub_id}"
 echo "export RESOURCE_GROUP=${resource_group}"
