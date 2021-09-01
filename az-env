@@ -5,7 +5,8 @@ environment=${1:-dev}
 IFS=$'\n'
 
 # first make sure we are logged out
-az logout
+az account clear
+#az logout
 
 set -e
 
@@ -18,7 +19,7 @@ echo "$title"
 PS3="$prompt "
 select opt in "${options[@]}" "Quit"
 do
-    if [[ "$REPLY" == "$((${#options[@]}+1))" ]]; then break; fi
+    if [[ "$REPLY" == "$((${#options[@]}+1))" ]]; then exit; fi
 
     # complain if no reply was there, and loop to ask again
     if [ "$REPLY" == "" -o $REPLY -gt $((${#options[@]}+1)) ]
@@ -40,11 +41,34 @@ echo ""
 sub_select='.[] | select(.name == $sub_name)'
 sub_id=$(echo ${sub_info}    | jq -r --arg sub_name "${sub_name}" "${sub_select}.id")
 tenant_id=$(echo ${sub_info} | jq -r --arg sub_name "${sub_name}" "${sub_select}.tenantId")
+home_tenant_id=$(echo ${sub_info} | jq -r --arg sub_name "${sub_name}" "${sub_select}.homeTenantId")
+# get all other subscriptions in the same home tenant
+other_sub_ids=($(echo "${sub_info}" | jq -r --arg home_tenant_id "${home_tenant_id}" --arg sub_id "${sub_id}" '.[] | select(.homeTenantId == $home_tenant_id and .id != $sub_id).id'))
 echo "subscription id: ${sub_id}"
 echo "tenant id: ${tenant_id}"
+echo "home tenant id: ${home_tenant_id}"
+echo "other subscription id's: ${other_sub_ids[@]}"
 
 # set subscription on account
 az account set -s "${sub_id}"
+
+acr_name=$(az acr list | jq -r ".[].name" | head -1)
+if [[ -z ${acr_name} ]]
+then
+    # switch to the other subscriptions and lookup there
+    for other_sub_id in "${other_sub_ids[@]}"
+    do
+        az account set -s "${other_sub_id}"
+        acr_name=$(az acr list | jq -r ".[].name" | head -1)
+	if [[ ! -z ${acr_name} ]]; then
+            break
+        fi
+    done
+    # and switch back again
+    az account set -s "${sub_id}"
+fi
+acr_registry="${acr_name}.azurecr.io"
+echo "ACR: ${acr_registry}"
 
 # get resource group name
 resource_group=$(az group list | jq -r --arg env "${environment}" '.[] | select(.name|test($env)).name')
@@ -59,8 +83,6 @@ then
 fi
 
 client_name="${key_vault_name%-*}"
-acr_name=$(az acr list | jq -r ".[].name" | head -1)
-acr_registry="${acr_name}.azurecr.io"
 
 # get all secrets and put them in a file for environment variable setting
 echo "retrieving secrets"
