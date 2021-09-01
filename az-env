@@ -60,7 +60,7 @@ then
     do
         az account set -s "${other_sub_id}"
         acr_name=$(az acr list | jq -r ".[].name" | head -1)
-	if [[ ! -z ${acr_name} ]]; then
+    if [[ ! -z ${acr_name} ]]; then
             break
         fi
     done
@@ -79,7 +79,7 @@ echo "key vault name: ${key_vault_name}"
 
 if [ ! -z "${AZURE_CENTRAL_ACR_NAME}" -a ! -z "${AZURE_CENTRAL_ACR_SUBSCRIPTION_ID}" ]
 then
-	az acr login --name="${AZURE_CENTRAL_ACR_NAME}" --subscription "${AZURE_CENTRAL_ACR_SUBSCRIPTION_ID}"
+    az acr login --name="${AZURE_CENTRAL_ACR_NAME}" --subscription "${AZURE_CENTRAL_ACR_SUBSCRIPTION_ID}"
 fi
 
 client_name="${key_vault_name%-*}"
@@ -94,14 +94,42 @@ echo "export SUBSCRIPTION_ID=${sub_id}"
 echo "export RESOURCE_GROUP=${resource_group}"
 echo "export KEY_VAULT_NAME=${key_vault_name}"
 echo "export KEY_VAULT_URI=https://${key_vault_name}.vault.azure.net/"
-secrets=($(az keyvault secret list --vault-name "${key_vault_name}" | jq -r '.[].name'))
-for i in "${!secrets[@]}"
-do
-	secret_name="${secrets[$i]}"
-	env_name=$(echo "${secret_name//-/_}" | tr '[:lower:]' '[:upper:]')
-	secret_value=$(az keyvault secret show --name "${secret_name}" --vault-name "${key_vault_name}" | jq -r ".value")
-	echo "export ${env_name}='${secret_value}'"
-	echo -n "." 1>&2
-done
+
+if which python > /dev/null
+then
+    # follow the faster path of getting secrets using a Python script
+    export KEY_VAULT_URI=https://${key_vault_name}.vault.azure.net/
+    export AZURE_CLIENT_ID=$(az keyvault secret show --name "app-etl-clientid" --vault-name "${key_vault_name}" | jq -r ".value")
+    export AZURE_CLIENT_SECRET=$(az keyvault secret show --name "app-etl-password" --vault-name "${key_vault_name}" | jq -r ".value")
+    python - << EOF
+import os
+
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
+credential = DefaultAzureCredential()
+
+secret_client = SecretClient(vault_url=os.environ.get("KEY_VAULT_URI"), credential=credential)
+secret_properties = secret_client.list_properties_of_secrets()
+
+for secret_property in secret_properties:
+    # the list doesn't include values or versions of the secrets
+    secret = secret_client.get_secret(secret_property.name)
+    name = secret.name.upper().replace('-', '_')
+    print(f"export {name}='{secret.value}'")
+EOF
+else
+    # follow the slower path of getting secrets using plain old bash scripting
+    secrets=($(az keyvault secret list --vault-name "${key_vault_name}" | jq -r '.[].name'))
+    for i in "${!secrets[@]}"
+    do
+        secret_name="${secrets[$i]}"
+        env_name=$(echo "${secret_name//-/_}" | tr '[:lower:]' '[:upper:]')
+        secret_value=$(az keyvault secret show --name "${secret_name}" --vault-name "${key_vault_name}" | jq -r ".value")
+        echo "export ${env_name}='${secret_value}'"
+        # print a progress dot
+        echo -n "." 1>&2
+    done
+fi
 ) > ~/.az-env-vars
 

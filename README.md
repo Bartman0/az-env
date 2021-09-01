@@ -64,3 +64,7 @@ The script that is run in the container is /etl/scripts/etl_${USER}.sh because w
 - jq, https://stedolan.github.io/jq/
 - az cli tools, https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 
+If you want to take advantage of faster retrieval of secrets through Python:
+- Python 3.7+
+- Python packages: azure-identity azure-keyvault
+
