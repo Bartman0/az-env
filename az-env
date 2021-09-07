@@ -100,6 +100,7 @@ then
     # follow the faster path of getting secrets using a Python script
     export KEY_VAULT_URI=https://${key_vault_name}.vault.azure.net/
     export AZURE_TENANT_ID=${tenant_id}
+    export AZURE_SUBSCRIPTION_ID=${sub_id}
     export AZURE_CLIENT_ID=$(az keyvault secret show --name "app-etl-clientid" --vault-name "${key_vault_name}" | jq -r ".value")
     export AZURE_CLIENT_SECRET=$(az keyvault secret show --name "app-etl-password" --vault-name "${key_vault_name}" | jq -r ".value")
     python - << EOF
