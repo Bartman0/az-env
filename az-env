@@ -133,5 +133,21 @@ else
         echo -n "." 1>&2
     done
 fi
+
+
 ) > ~/.az-env-vars
+
+# read what we got so far
+source ~/.az-env-vars
+
+# add Snowflake vars
+(
+echo "export SNOWSQL_ACCOUNT=${SNOWFLAKE_ACCOUNT_NAME}"
+echo "export SNOWSQL_HOST=${SNOWFLAKE_ACCOUNT_URL}"
+echo "export SNOWSQL_DATABASE=${SNOWFLAKE_DWH_DATABASE}"
+echo "export SNOWSQL_WAREHOUSE=${SNOWFLAKE_ETL_WAREHOUSE}"
+echo "export SNOWSQL_SCHEMA=${SNOWFLAKE_ETL_SCHEMA_TMP}"
+echo "export SNOWSQL_USER=${SNOWFLAKE_ETL_USERNAME}"
+echo "export SNOWSQL_PWD=${SNOWFLAKE_ETL_PASSWORD}"
+) >> ~/.az-env-vars
 
