@@ -1,6 +1,6 @@
 # az-env
 Project for an Azure login script (az-env) including settings of env vars, and a script to build and execute Pentaho DI Docker containers both locally and as deployment group (az-drun). The project is named after the script that started it all, hence the duplication of title and script.
-These scripts assume our standards and best practices, so may require adapting for your specific environment.
+These scripts assume our standards and best practices, so may require adaptation to your specific environment.
 
 ## az-env
 Script that logs you in into Azure and sets a lot of env vars.
@@ -26,6 +26,7 @@ environment: *dev/tst/acc/prd*
 
 The secrets are converted by their name in the sense that dashes are replaced by underscores, and the names are made all uppercase.
 Setting the env vars based on secrets is a rather slow process. A dotted bar is shown to indicate progress.
+Unless you have Python installed, then a far more quicker method is being used with a small inline Python script.
 
 Execute:
 - az-env-dev
@@ -55,9 +56,18 @@ az-drun [ \<environment> [ \<container base name> ] ]
 
 environment: *dev/tst/acc/prd/local*, where *local* will run the Docker container locally
 
-container base name: default *dwh-etl* will be resulting in container names such as client-dwh-etl and images names such as client-dwh-etl:rkooijman
+container base name: default of *dwh-etl* will be resulting in container names such as client-dwh-etl and images names such as client-dwh-etl:rkooijman
 
 The script that is run in the container is /etl/scripts/etl_${USER}.sh because we are developing here. Do you want to run the standard daily job or what have you? Just symlink /etl/scripts/etl_${USER}.sh --> /etl/scripts/dwh_daily.sh for example.
+
+## acr-login
+Installation:
+- put acr-login in your ~/bin directory
+
+Usage:
+acr-login
+
+This script just does a login for you into the ACR using the env vars set earlier by az-env.
 
 ## Requirements
 
