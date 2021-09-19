@@ -134,10 +134,10 @@ else
     done
 fi
 
-
+# we run in a subshell and redirect all stdout to a file
 ) > ~/.az-env-vars
 
-# read what we got so far
+# read what we got so far to get our hands on the secrets retrieved so far
 source ~/.az-env-vars
 
 # add Snowflake vars
