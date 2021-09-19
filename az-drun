@@ -2,6 +2,11 @@
 
 set -e
 
+# command-line arguments:
+# - environment dev/tst/acc/prd/local
+# - parameter, for example: klantnaam=test
+# - container base name, default dwh-etl
+
 # use parameters, or use defaults otherwise
 environment=${1:-dev}
 param1="$2"
@@ -41,7 +46,12 @@ image_name="${container_name}:${USER}"
 deployment_group="container-etl-${USER}"   # the default name when not specifying a name
 container_command="/etl/scripts/etl_${USER}.sh"
 container_command_array="[\"${container_command}\"]"
-container_group="${client_name}-${environment}-etl-${param1_value}"
+if [ -z "${param1_value}" ]
+then
+    container_group="${client_name}-${environment}-etl"
+else
+    container_group="${client_name}-${environment}-etl-${param1_value}"
+fi
 
 export CONF_KEYVAULT=${KEY_VAULT_URI}
 export AZURE_CLIENT_ID=${APP_ETL_CLIENTID}
@@ -84,6 +94,12 @@ else
 		container_parameters=( "${container_parameters[@]/#/-p }" )
 		az deployment group create -g ${RESOURCE_GROUP} -n ${deployment_group} --template-file container-etl-template.json \
 			${container_parameters[@]}
+		# we need to start it explicitly here too
+		az container start -g ${RESOURCE_GROUP} -n ${container_group}
 	fi
+	domain=$(az ad signed-in-user show | jq -r ".userPrincipalName" | cut -d '@' -f 2)
+        container_url="https://portal.azure.com/#@${domain}/resource/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerInstance/containerGroups/${container_group}/containers"
+        echo "for progress see: ${container_url}"
+	open "${container_url}"
 fi
 

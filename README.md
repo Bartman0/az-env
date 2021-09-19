@@ -78,3 +78,8 @@ If you want to take advantage of faster retrieval of secrets through Python:
 - Python 3.7+
 - Python packages: azure-identity azure-keyvault
 
+## TODO
+
+- when running a Docker locally, also mount any relevant fileshares and mount them
+- optimize logins: check for any logged in accounts that are still valid for some time
+
