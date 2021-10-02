@@ -43,17 +43,19 @@ fi
 function parse_connection_string {
 	OLD_IFS=${IFS}
 	IFS=';'
-	echo "$1" | read -s DefaultEndpointsProtocol EndpointSuffix AccountName AccountKey
-	if [ -z "${DefaultEndpointsProtocol}" ]
+	eval $(echo "$1" | (read -s DefaultEndpointsProtocol EndpointSuffix AccountName AccountKey; \
+		echo "$DefaultEndpointsProtocol $EndpointSuffix $AccountName $AccountKey"))
+	results=($DefaultEndpointsProtocol $EndpointSuffix $AccountName $AccountKey)
+	if [ ${#results[@]} -ne 4 ]
 	then
 		echo "error reading connection string" >&2
-		return
+	else
+		# just eval the strings with assignments, rename var names in the process, prefix with CONN_
+		eval "CONN_PROTOCOL=${results[0]}"
+		eval "CONN_SUFFIX=${results[1]}"
+		eval "CONN_ACCOUNT_NAME=${results[2]}"
+		eval "CONN_ACCOUNT_KEY=${results[3]}"
 	fi
-	# just eval the strings with assignments, prefix with CONN_
-	eval "CONN_${DefaultEndpointsProtocol}"
-	eval "CONN_${EndpointSuffix}"
-	eval "CONN_${AccountName}"
-	eval "CONN_${AccountKey}"
 	IFS=${OLD_IFS}
 }
 
@@ -73,33 +75,30 @@ function do_mount {
 
 function docker_mount_binds {
 	mkdir -p mnt
-	OLD_IFS=${IFS}
-	IFS=$'\n'
 	account_ids=($(az storage account list | jq -r '.[].id'))
-	IFS=${OLD_IFS}
 	binds=()
 	for id in ${account_ids[@]}
 	do
 		connection=$(az storage account show-connection-string --ids "${id}" | jq -r ".connectionString")
 		parse_connection_string "${connection}"
-		case "${CONN_AccountName}" in
+		case "${CONN_ACCOUNT_NAME}" in
 		# if the account name equals the resource group without dashes plus 'external', we have the external storage account at hand
 		"${RESOURCE_GROUP//-/}external")
 			# get the specific key vault
 			vault_name=$(az keyvault list | jq -r ".[].name" | grep -i "${RESOURCE_GROUP}-${param1_first3}")
 			sas_token=$(az keyvault secret show --vault-name "${vault_name}" --name "sas-token" -o json | jq -r ".value")
-			key=$(rawurlencode "${CONN_AccountKey}")
+			key=$(rawurlencode "${CONN_ACCOUNT_KEY}")
 			# mount the external storage account on the param1 value
-			local_mount=$(do_mount "${param1_value}" "smb://${CONN_AccountName}:${key}@${CONN_AccountName}.file.${CONN_EndpointSuffix}/${param1_value}")
+			local_mount=$(do_mount "${param1_value}" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/${param1_value}")
 			binds+=($local_mount)
 			;;
 		# if the account name equals the resource group without dashes, we have the default storage account at hand
 		"${RESOURCE_GROUP//-/}")
-			key=$(rawurlencode "${CONN_AccountKey}")
+			key=$(rawurlencode "${CONN_ACCOUNT_KEY}")
 			# mount the standard /data and /archive directories
-			local_mount=$(do_mount "data" "smb://${CONN_AccountName}:${key}@${CONN_AccountName}.file.${CONN_EndpointSuffix}/data")
+			local_mount=$(do_mount "data" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/data")
 			binds+=($local_mount)
-			local_mount=$(do_mount "archive" "smb://${CONN_AccountName}:${key}@${CONN_AccountName}.file.${CONN_EndpointSuffix}/archive")
+			local_mount=$(do_mount "archive" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/archive")
 			binds+=($local_mount)
 			;;
 		esac
@@ -108,11 +107,8 @@ function docker_mount_binds {
 }
 
 client_name=${KEY_VAULT_NAME%-*}
-#container_name="${client_name}-${container_base_name}"
 container_name="${container_base_name}"
 image_name="${container_name}:${USER}"
-#deployment_group="${image_name//:/-}"
-#deployment_group="container-etl-template"   # the default name when not specifying a name
 deployment_group="container-etl-${USER}"   # the default name when not specifying a name
 container_command="/etl/scripts/etl_${USER}.sh"
 container_command_array="[\"${container_command}\"]"
@@ -138,7 +134,7 @@ if [ ${run_local} -eq 1 ]
 then
 	binds=$(docker_mount_binds)
 	# the env vars are set again in this local run to make copy-paste of the command complete and therefore easier
-	docker run -it --rm "${binds}" --name "${container_name}" -e CONF_KEYVAULT="${KEY_VAULT_URI}" -e AZURE_TENANT_ID -e AZURE_CLIENT_ID="${APP_ETL_CLIENTID}" -e AZURE_CLIENT_SECRET="${APP_ETL_PASSWORD}" ${ACR_REGISTRY}/${image_name} "${container_command}"
+	docker run -it --rm ${binds} --name "${container_name}" -e CONF_KEYVAULT="${KEY_VAULT_URI}" -e AZURE_TENANT_ID -e AZURE_CLIENT_ID="${APP_ETL_CLIENTID}" -e AZURE_CLIENT_SECRET="${APP_ETL_PASSWORD}" ${ACR_REGISTRY}/${image_name} "${container_command}"
 else
 	docker push ${ACR_REGISTRY}/${image_name}
 	# test existence of deployment group
