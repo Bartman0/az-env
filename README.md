@@ -61,7 +61,7 @@ Installation:
 - put az-drun in your ~/bin directory
 
 Usage:
-az-drun [ \<environment> [ \<container base name> ] ]
+az-drun [ \<environment> [ \<container deployment parameters> [ \<container base name> ] ] ]
 
 environment: *dev/tst/acc/prd/local*, where *local* will run the Docker container locally
 
@@ -79,6 +79,18 @@ Usage:
 acr-login
 
 This script just does a login for you into the ACR using the env vars set earlier by az-env.
+
+## az-liquibase
+
+Installation:
+
+- put az-liquibase in your ~/bin directory
+
+Usage:
+az-liquibase [ \<environment> [ \<container base name> ] ]
+
+This script will apply `master.xml` in your *changelogs* directory to your Snowflake database.
+This script is highly dependent on our way of working with Snowflake database, so it will need tailoring for your environment and/or database.
 
 ## Requirements
 
