@@ -41,6 +41,6 @@ export AZURE_CLIENT_SECRET=${APP_DEVOPS_PASSWORD}
 # run in subshell so an exit code != 0 has no consequences
 ( set +e; docker rm "${container_name}"; true )
 docker build -t ${ACR_REGISTRY}/${image_name} .
-snowflake_url="jdbc:snowflake://${client_name}.west-europe.azure.snowflakecomputing.com/?db=DWH_${environment}"
+snowflake_url="jdbc:snowflake://${SNOWFLAKE_ACCOUNT_URL}/?db=DWH_${environment}"
 container_command="liquibase --liquibaseSchemaName=MA --username=${SNOWFLAKE_LIQUIBASE_USERNAME} --password=${SNOWFLAKE_LIQUIBASE_PASSWORD} --url=${snowflake_url} --databaseChangeLogTableName=MELOG_LIQUIBASE --databaseChangeLogLockTableName=MELOG_LIQUIBASELOCK --changeLogFile=master.xml --logLevel=info update"
 docker run -it --rm --name "${container_name}" -e CONF_KEYVAULT -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET ${ACR_REGISTRY}/${image_name} ${container_command}
