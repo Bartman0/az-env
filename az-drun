@@ -107,16 +107,19 @@ function docker_mount_binds {
 }
 
 client_name=${KEY_VAULT_NAME%-*}
-container_name="${container_base_name}"
-image_name="${container_name}:${USER}"
-deployment_group="container-etl-${USER}"   # the default name when not specifying a name
 container_command="/etl/scripts/etl_${USER}.sh"
 container_command_array="[\"${container_command}\"]"
 if [ -z "${param1_value}" ]
 then
+	deployment_group="container-etl-${USER}"   # the default name when not specifying a name
     container_group="${client_name}-${environment}-etl"
+	container_name="${container_base_name}"
+	image_name="${container_name}:${USER}"
 else
+	deployment_group="container-etl-${param1_value}-${USER}"   # the default name when not specifying a name
     container_group="${client_name}-${environment}-etl-${param1_value}"
+	container_name="${container_base_name}-${param1_value}"
+	image_name="${container_name}:${USER}"
 fi
 
 export CONF_KEYVAULT=${KEY_VAULT_URI}
@@ -159,8 +162,7 @@ else
 		fi
 		# put '-p ' for each parameter
 		container_parameters=( "${container_parameters[@]/#/-p }" )
-		az deployment group create -g ${RESOURCE_GROUP} -n ${deployment_group} --template-file container-etl-template.json \
-			${container_parameters[@]}
+		az deployment group create -g ${RESOURCE_GROUP} -n ${deployment_group} --template-file container-etl-template.json ${container_parameters[@]}
 		# we need to start it explicitly here too
 		az container start -g ${RESOURCE_GROUP} -n ${container_group}
 	fi
@@ -169,4 +171,3 @@ else
         echo "for progress see: ${container_url}"
 	open "${container_url}"
 fi
-
