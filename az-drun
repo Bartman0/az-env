@@ -111,14 +111,14 @@ container_command="/etl/scripts/etl_${USER}.sh"
 container_command_array="[\"${container_command}\"]"
 if [ -z "${param1_value}" ]
 then
-	deployment_group="container-etl-${USER}"   # the default name when not specifying a name
-    container_group="${client_name}-${environment}-etl"
+	deployment_group="container-deployment-${USER}"   # the default name when not specifying a name
 	container_name="${container_base_name}"
+	container_group="${client_name}-${environment}-${container_name}"
 	image_name="${container_name}:${USER}"
 else
-	deployment_group="container-etl-${param1_value}-${USER}"   # the default name when not specifying a name
-    container_group="${client_name}-${environment}-etl-${param1_value}"
+	deployment_group="container-deployment-${USER}-${param1_value}"   # the default name when not specifying a name
 	container_name="${container_base_name}-${param1_value}"
+	container_group="${client_name}-${environment}-${container_name}"
 	image_name="${container_name}:${USER}"
 fi
 
@@ -149,13 +149,22 @@ else
 	else
 		# create the deployment group with the container parameters
 		declare -a container_parameters
+#		container_parameters=( "projectName=${client_name}" \
+#			"containerProject=${container_name}" \
+#			"containerName=${container_name}" \
+#			"Containerimage=${container_name}" \
+#			"containerCommand=${container_command_array}" \
+#			"environment=${environment}" \
+#			"etlPrincipalId=${APP_ETL_CLIENTID}" \
+#			"etlPrincipalPassword=${APP_ETL_PASSWORD}" \
+#			"containerTag=${USER}" )
 		container_parameters=( "projectName=${client_name}" \
-			"containerProject=${container_name}" \
 			"containerName=${container_name}" \
+			"Containerimage=${container_name}" \
 			"containerCommand=${container_command_array}" \
 			"environment=${environment}" \
-			"etlPrincipalId=${APP_ETL_CLIENTID}" \
-			"etlPrincipalPassword=${APP_ETL_PASSWORD}" \
+			"containerRegistryUser=${APP_ETL_CLIENTID}" \
+			"containerRegistryPassword=${APP_ETL_PASSWORD}" \
 			"containerTag=${USER}" )
 		if [ "${param1}" != "" ]; then
 			container_parameters+=( "${param1}" )
