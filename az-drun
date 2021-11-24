@@ -85,11 +85,20 @@ function docker_mount_binds {
 		# if the account name equals the resource group without dashes plus 'external', we have the external storage account at hand
 		"${RESOURCE_GROUP//-/}external")
 			# get the specific key vault
-			vault_name=$(az keyvault list | jq -r ".[].name" | grep -i "${RESOURCE_GROUP}-${param1_first3}")
+			vault_name_list=$(az keyvault list | jq -r ".[].name")
+			vault_name=$(echo ${vault_name_list} | grep -i "${RESOURCE_GROUP}-${param1_first3}")
+			# if the vault can not be found, fall back to the default version
+			if [ -z "${vault_name}" ]; then
+				vault_name=$(echo ${vault_name_list} | grep -i "${RESOURCE_GROUP}")
+			fi
 			sas_token=$(az keyvault secret show --vault-name "${vault_name}" --name "sas-token" -o json | jq -r ".value")
 			key=$(rawurlencode "${CONN_ACCOUNT_KEY}")
-			# mount the external storage account on the param1 value
-			local_mount=$(do_mount "${param1_value}" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/${param1_value}")
+			# mount the external storage account on the param1 value unless it is empty; in that case use 'external'
+			mount_point="${param1_value}"
+			if [ -z "${mount_point}" ]; then
+				mount_point="external"
+			fi
+			local_mount=$(do_mount "${mount_point}" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/${mount_point}")
 			binds+=($local_mount)
 			;;
 		# if the account name equals the resource group without dashes, we have the default storage account at hand
