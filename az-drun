@@ -7,6 +7,9 @@ set -e
 # - parameter, for example: klantnaam=test
 # - container base name, default dwh-etl
 
+export MOUNT_ROOT=mnt
+export SHARE_ROOT=/data/source
+
 . ${0%/*}/urlencode.sh
 
 # use parameters, or use defaults otherwise
@@ -63,8 +66,24 @@ function do_mount {
 	arch=$(uname -s)
 	case "${arch}" in
 	Darwin)
-		open -g "$2"
-		echo "-v /Volumes/$1:/$1"
+		mkdir -p "$3"
+		mount -t smbfs "$2" "$3"
+		echo "-v $(pwd)/$3:/$1"
+		echo "mounted /$1" >&2
+		;;
+	*)
+		echo "mount on this platform is not supported yet" >&2
+		;;
+	esac
+}
+
+function do_mount_share {
+	arch=$(uname -s)
+	case "${arch}" in
+	Darwin)
+		mkdir -p "$3"
+		mount -t smbfs "$2" "$3"
+		echo "-v $(pwd)/$3:${SHARE_ROOT}/$1"
 		echo "mounted /$1" >&2
 		;;
 	*)
@@ -74,7 +93,8 @@ function do_mount {
 }
 
 function docker_mount_binds {
-	mkdir -p mnt
+	mount_dir="${MOUNT_ROOT}/$1"
+	mkdir -p "${mount_dir}"
 	account_ids=($(az storage account list | jq -r '.[].id'))
 	binds=()
 	for id in ${account_ids[@]}
@@ -97,7 +117,7 @@ function docker_mount_binds {
                         for share in ${shares[@]}
                         do
 			        mount_point="${share}"
-			        local_mount=$(do_mount "${mount_point}" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/${mount_point}")
+			        local_mount=$(do_mount_share "${mount_point}" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/${share}" "${mount_dir}/${mount_point}")
 			        binds+=($local_mount)
                         done
 			;;
@@ -105,9 +125,9 @@ function docker_mount_binds {
 		"${RESOURCE_GROUP//-/}")
 			key=$(rawurlencode "${CONN_ACCOUNT_KEY}")
 			# mount the standard /data and /archive directories
-			local_mount=$(do_mount "data" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/data")
+			local_mount=$(do_mount "data" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/data" "${mount_dir}/data")
 			binds+=($local_mount)
-			local_mount=$(do_mount "archive" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/archive")
+			local_mount=$(do_mount "data/archive" "smb://${CONN_ACCOUNT_NAME}:${key}@${CONN_ACCOUNT_NAME}.file.${CONN_SUFFIX}/archive" "${mount_dir}/data/archive")
 			binds+=($local_mount)
 			;;
 		esac
@@ -144,7 +164,7 @@ az acr login --name ${ACR_NAME} --subscription ${SUBSCRIPTION_ID}
 
 if [ ${run_local} -eq 1 ]
 then
-	binds=$(docker_mount_binds)
+	binds=$(docker_mount_binds "${container_name}")
 	# the env vars are set again in this local run to make copy-paste of the command complete and therefore easier
 	docker run -it --rm ${binds} --name "${container_name}" -e CONF_KEYVAULT="${KEY_VAULT_URI}" -e AZURE_TENANT_ID -e AZURE_CLIENT_ID="${APP_ETL_CLIENTID}" -e AZURE_CLIENT_SECRET="${APP_ETL_PASSWORD}" ${ACR_REGISTRY}/${image_name} "${container_command}"
 else
