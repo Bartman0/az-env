@@ -84,7 +84,7 @@ function do_mount_share {
 		mkdir -p "$3"
 		mount -t smbfs "$2" "$3"
 		echo "-v $(pwd)/$3:${SHARE_ROOT}/$1"
-		echo "mounted /$1" >&2
+		echo "mounted ${SHARE_ROOT}/$1" >&2
 		;;
 	*)
 		echo "mount on this platform is not supported yet" >&2
