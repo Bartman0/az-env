@@ -40,19 +40,19 @@ This will prompt an Azure login screen where you select your account to be used.
 
 After this, running *env* gives:
 
-- SUBSCRIPTION_ID=2434a957-464b-4a4d-9f54-1b0d41f1098f
+- SUBSCRIPTION_ID=2434a957-464b-3a43-9f33-1b0d41f1098f
 - RESOURCE_GROUP=client-dev
 - KEY_VAULT_NAME=client-dev
-- APP_DEVOPS_CLIENTID=64db3515-b3ef-4358-a346-d4973fd693d7
+- APP_DEVOPS_CLIENTID=64db3515-b3ef-4353-a343-d4373fd693d7
 - [[ etc; further output deleted ]]
 
 Built into the script is the option to login to a central container registry.
 For this login to work you must set env vars AZURE_CENTRAL_ACR_NAME and AZURE_CENTRAL_ACR_SUBSCRIPTION_ID.
 
-For example, put this into your ~/.profile:
+For example, put this into your ~/.profile (*this is NOT the real SUBSCRIPTION_ID to prevent information leakage*):
 
 - export AZURE_CENTRAL_ACR_NAME="launchpad001"
-- export AZURE_CENTRAL_ACR_SUBSCRIPTION_ID="602a3ac6-42c1-4826-a802-18f39152d8b6"
+- export AZURE_CENTRAL_ACR_SUBSCRIPTION_ID="602a3ac6-****-****-****-18f39152d8b6"
 
 ## az-drun
 
