@@ -49,10 +49,10 @@ After this, running *env* gives:
 Built into the script is the option to login to a central container registry.
 For this login to work you must set env vars AZURE_CENTRAL_ACR_NAME and AZURE_CENTRAL_ACR_SUBSCRIPTION_ID.
 
-For example, put this into your ~/.profile (*this is NOT the real SUBSCRIPTION_ID to prevent information leakage*):
+For example, put this into your ~/.profile (**this is NOT the real SUBSCRIPTION_ID to prevent information leakage, substitute with the real one**):
 
 - export AZURE_CENTRAL_ACR_NAME="launchpad001"
-- export AZURE_CENTRAL_ACR_SUBSCRIPTION_ID="602a3ac6-****-****-****-18f39152d8b6"
+- export AZURE_CENTRAL_ACR_SUBSCRIPTION_ID="602a3ac6-####-####-####-18f39152d8b6"
 
 ## az-drun
 
