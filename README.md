@@ -94,6 +94,7 @@ This script is highly dependent on our way of working with Snowflake database, s
 
 ## Requirements
 
+- bash version 4+ (should suffice, I run version 5.1 myself)
 - jq, <https://stedolan.github.io/jq/>
 - az cli tools, <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>
 
@@ -104,5 +105,4 @@ If you want to take advantage of faster retrieval of secrets through Python:
 
 ## TODO
 
-- when running a Docker locally, also mount any relevant fileshares and mount them
 - optimize logins: check for any logged in accounts that are still valid for some time
