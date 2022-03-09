@@ -95,7 +95,7 @@ function do_mount_share {
 function docker_mount_binds {
 	mount_dir="${MOUNT_ROOT}/$1"
 	mkdir -p "${mount_dir}"
-	account_ids=($(az storage account list | jq -r '.[].id'))
+	account_ids=($(az storage account list | jq -r '.[].id' | grep "${RESOURCE_GROUP}"))
 	binds=()
 	for id in ${account_ids[@]}
 	do
